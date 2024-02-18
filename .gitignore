@@ -1,0 +1,10 @@
+.venv/
+.DS_Store
+.idea/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+.vscode/
+!.vscode/launch.json
+.docker-volumes/
+environment.yml

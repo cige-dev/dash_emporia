@@ -1,5 +1,5 @@
-from api import data_api
-from transforming import transforming
+from src.emporia_conection import data_api
+from src.transforming import transforming
 from dash.dependencies import Input, Output, State
 from dateutil.relativedelta import relativedelta
 from datetime import datetime

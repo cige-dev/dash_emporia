@@ -2,8 +2,8 @@ import math
 import time
 import sys
 import grpc
-import partner_api2_pb2_grpc as api
-from partner_api2_pb2 import *
+import src.partner_api2_pb2_grpc as api
+from src.partner_api2_pb2 import *
 
 # Set an EV Charger to the provided settings 
 def changeEVChargerToSettings(stub, auth_token, evCharger):
