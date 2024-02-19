@@ -1,10 +1,11 @@
 from dateutil.relativedelta import relativedelta
 from dash import dcc, html, dash_table
 import plotly.express as px
+import datetime, calendar
 import pandas as pd
 
 
-def transforming(cliente, data, data_hist, start_date, end_date):
+def transforming(cliente, data, start_date, end_date):
     lista_separada = [valor.split('-') for valor in data.columns]
     fases = [elemento[1] for elemento in lista_separada if len(elemento) == 2]
     etiquetas = [elemento[1] for elemento in lista_separada if len(elemento) >= 3]
@@ -53,13 +54,20 @@ def transforming(cliente, data, data_hist, start_date, end_date):
                 color_discrete_sequence=color_palette)
     fig3.update_traces(marker=dict(line=dict(color='#FFFFFF', width=2)))
     # Fig4
-    df_mes_actual = filtered_df
-    df_mes_anterior = data[data["Time Bucket"] >= filtered_df["Time Bucket"].max()-relativedelta(days=len(filtered_df))]
-    fig4 = px.bar(x=data_hist["Time Bucket"], y=data_hist.drop('Time Bucket', axis=1).sum(axis=1))
-    fig4.update_traces(marker_color='#668616')
-    fig4.update_layout(title="Consumo total por mes", yaxis_title="Consumo (kWh)",
-                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=False), xaxis_title="",
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    data_fig = data.copy()
+    data_fig['Time Bucket'] = pd.to_datetime(data_fig['Time Bucket'])  
+    one_year_ago = datetime.datetime.now() - pd.DateOffset(years=1)  
+    df_last_year = data_fig[data_fig['Time Bucket'] > one_year_ago]   
+    columns_to_sum = df_last_year.select_dtypes(include=['number']).columns.tolist()  
+    grouped = df_last_year.groupby([df_last_year['Time Bucket'].dt.year.rename('Year'),  
+                                df_last_year['Time Bucket'].dt.month.rename('Month')])[columns_to_sum].sum()  
+    monthly_sums = grouped.reset_index()  
+    monthly_sums['Month'] = monthly_sums['Month'].apply(lambda x: calendar.month_name[x])  
+    fig4 = px.bar(monthly_sums, x='Month', y=monthly_sums[columns_to_sum].sum(axis=1))  
+    fig4.update_traces(marker_color='#668616')  
+    fig4.update_layout(title="Consumo total por mes", yaxis_title="Consumo (kWh)",  
+                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=False), xaxis_title="Mes",  
+                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')  
     # Fig5
     circuitos = etiq_df.drop(['Time Bucket']+fases,axis=1,inplace=False).sum()
     table2 = pd.DataFrame(circuitos)
@@ -77,9 +85,11 @@ def transforming(cliente, data, data_hist, start_date, end_date):
                     yaxis_title='Consumo (%)', showlegend=False, 
                     paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     #Fig6
+    df_mes_actual = filtered_df
+    df_mes_anterior = data[data["Time Bucket"] >= filtered_df["Time Bucket"].max()-relativedelta(days=len(filtered_df))]
     df = df_mes_anterior.drop(['Time Bucket','Consumo total']+list(set(etiquetas))+fases,axis=1)
     df = df[df > df.mean()+2*df.std()]
-    fig6 = px.bar(df.sum()[df.sum()>1], orientation='h')
+    fig6 = px.bar(df.sum()[df.sum()>5], orientation='h')
     fig6.update_traces(marker_color='#668616')
     fig6.update_layout(title='Consumos atípicos con periodo anterior (µ+2σ)', 
                     xaxis_title="Consumo (kWh)", showlegend=False, yaxis_title="",
