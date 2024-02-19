@@ -21,6 +21,7 @@ def checking_data(client):
             data = data.merge(data_concat, on='Time Bucket')
             data.to_csv(f'db/{device_name.lower()}.csv',index=False)
         except: pass
+        return device_name, data
     else:
         data = pd.read_csv(f"{client_on_db[0].lower()}")
         data['Time Bucket'] = [pd.to_datetime(t, format='%Y-%m-%d').date() for t in data['Time Bucket']]
@@ -30,6 +31,4 @@ def checking_data(client):
             data_concat, device_name = data_extract(client.lower(), start_interval, current_date.timestamp())
             data = data.merge(data_concat, on='Time Bucket')
             data.to_csv(f'db/{device_name.lower()}.csv', index=False)
-        if time_diff.days==0: 
-            data_concat, device_name = data_extract(client.lower(), current_date.timestamp(), current_date.timestamp())
-    return device_name, data
+        return client_on_db[0], data
