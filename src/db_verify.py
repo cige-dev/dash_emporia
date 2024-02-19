@@ -31,4 +31,4 @@ def checking_data(client):
             data_concat, device_name = data_extract(client.lower(), start_interval, current_date.timestamp())
             data = data.merge(data_concat, on='Time Bucket')
             data.to_csv(f'db/{device_name.lower()}.csv', index=False)
-        return client_on_db[0], data
+        return client_on_db[0][3:-4], data
