@@ -16,19 +16,19 @@ def checking_data(client):
             for i in range(4):
                 start_interval = (start_date + relativedelta(months=3*i)).timestamp()
                 end_interval = (start_date + relativedelta(months=3*(i+1)) if i<3 else current_date).timestamp()
-                data, device_name = data_extract(client.lower(), start_interval, end_interval)
+                data, device_name = data_extract(client, start_interval, end_interval)
                 data_concat.append(data)
-            data = data.merge(data_concat, on='Time Bucket')
+            data = pd.concat(data_concat)
             data.to_csv(f'db/{device_name.lower()}.csv',index=False)
         except: pass
-        return device_name, data
     else:
-        data = pd.read_csv(f"{client_on_db[0].lower()}")
+        data = pd.read_csv(f"{client_on_db[0].lower()}")      
         data['Time Bucket'] = [pd.to_datetime(t, format='%Y-%m-%d').date() for t in data['Time Bucket']]
-        time_diff = current_date-pd.to_datetime(data['Time Bucket'].values[-1])
-        if 1<time_diff.days<60:
-            start_interval = (start_date + relativedelta(months=9)).timestamp()
-            data_concat, device_name = data_extract(client.lower(), start_interval, current_date.timestamp())
-            data = data.merge(data_concat, on='Time Bucket')
-            data.to_csv(f'db/{device_name.lower()}.csv', index=False)
-        return client_on_db[0][3:-4], data
+        date_obj = data['Time Bucket'].values[-1]
+        last_date = datetime(date_obj.year, date_obj.month, date_obj.day)  
+        data_concat, device_name = data_extract(cliente=client, 
+                                                start_interval=last_date.timestamp(), 
+                                                end_interval=current_date.timestamp())
+        data = pd.concat([data.drop(len(data)-1),data_concat])
+        data.to_csv(f'db/{device_name.lower()}.csv', index=False)
+    return device_name, data
