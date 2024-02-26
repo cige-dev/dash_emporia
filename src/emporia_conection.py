@@ -1,10 +1,9 @@
-import grpc
 import src.partner_api2_pb2_grpc as api
 from src.partner_api2_pb2 import *
 import pandas as pd
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
 import numpy as np
+import grpc
+
 
 def data_extract(cliente, start_interval, end_interval):
     # Endpoint // Response // Full conection

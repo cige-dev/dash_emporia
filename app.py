@@ -1,6 +1,6 @@
 from src.db_verify import checking_data
 from src.transforming import transforming
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from dash import dcc, html

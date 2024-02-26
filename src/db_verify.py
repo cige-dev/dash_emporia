@@ -1,6 +1,7 @@
 from datetime import datetime  
 from dateutil.relativedelta import relativedelta  
 from src.emporia_conection import data_extract
+from sqlalchemy import create_engine  
 import pandas as pd
 import time, glob
 
@@ -9,7 +10,7 @@ def checking_data(client):
     device_name, data = ('', pd.DataFrame(columns=['Time Bucket']))
     current_date = datetime.fromtimestamp(time.time())
     start_date = datetime.fromtimestamp(time.time()) - relativedelta(years=1)
-    client_on_db = [i for i in glob.glob('db/*.csv') if client.lower() in i]
+    client_on_db = [i for i in glob.glob('db/*.db') if client.lower() in i]
     if len(client_on_db)==0:
         try:
             data_concat = []
@@ -19,16 +20,18 @@ def checking_data(client):
                 data, device_name = data_extract(client, start_interval, end_interval)
                 data_concat.append(data)
             data = pd.concat(data_concat)
-            data.to_csv(f'db/{device_name.lower()}.csv',index=False)
+            engine = create_engine(f'sqlite:///db/{device_name.lower()}.db')
+            data.to_sql(f'{device_name.lower()}', con=engine, if_exists='replace', index=False)
         except: pass
     else:
-        data = pd.read_csv(f"{client_on_db[0].lower()}")      
+        engine = create_engine(f'sqlite:///{client_on_db[0]}')
+        data = pd.read_sql(f"{client_on_db[0][3:-3]}", con=engine)  
         data['Time Bucket'] = [pd.to_datetime(t, format='%Y-%m-%d').date() for t in data['Time Bucket']]
-        date_obj = data['Time Bucket'].values[-1]
-        last_date = datetime(date_obj.year, date_obj.month, date_obj.day)  
+        last_date = data['Time Bucket'].values[-1]
+        last_date = datetime(last_date.year, last_date.month, last_date.day)  
         data_concat, device_name = data_extract(cliente=client, 
                                                 start_interval=last_date.timestamp(), 
                                                 end_interval=current_date.timestamp())
-        data = pd.concat([data.drop(len(data)-1),data_concat])
-        data.to_csv(f'db/{device_name.lower()}.csv', index=False)
+        data = pd.concat([data.iloc[:-1],data_concat])
+        data.to_sql(f'{device_name.lower()}', con=engine, if_exists='replace', index=False)
     return device_name, data
