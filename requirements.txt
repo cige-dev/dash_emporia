@@ -11,3 +11,4 @@ requests
 flask
 gunicorn
 nbformat>=4.2.0
+sqlalchemy
