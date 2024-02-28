@@ -36,14 +36,19 @@ def data_extract(cliente, start_interval, end_interval):
             for circuit in device.circuit_infos:
                 if circuit.name != '':
                     names[circuit.channel_number] = circuit.sub_type+'-'+circuit.name
-    device_found =  [i for i in usageResponse.device_usages if i.manufacturer_device_id==device_id][0]
-    data['Time Bucket'] = pd.date_range(start=pd.to_datetime(device_found.bucket_epoch_seconds[0], unit='s'),
-                                        end=pd.to_datetime(device_found.bucket_epoch_seconds[-1], unit='s'),
-                                        periods=len(device_found.bucket_epoch_seconds)).date
-    for circuit in device_found.channel_usages:
-        if circuit.channel in names.keys():
-            data[f'{circuit.channel}-{names[circuit.channel]}'] = np.array(circuit.usages)/1000
-        if circuit.channel == 1: data[f'{circuit.channel}-Mains_A'] = np.array(circuit.usages)/1000
-        if circuit.channel == 2: data[f'{circuit.channel}-Mains_B'] = np.array(circuit.usages)/1000
-        if circuit.channel == 3: data[f'{circuit.channel}-Mains_C'] = np.array(circuit.usages)/1000
-    return data, device_name
+            break
+    device_found =  [i for i in usageResponse.device_usages if i.manufacturer_device_id==device_id]
+    if len(device_found)==0:
+        return data, device_name
+    else:
+        device_found = device_found[0]
+        data['Time Bucket'] = pd.date_range(start=pd.to_datetime(device_found.bucket_epoch_seconds[0], unit='s'),
+                                            end=pd.to_datetime(device_found.bucket_epoch_seconds[-1], unit='s'),
+                                            periods=len(device_found.bucket_epoch_seconds)).date
+        for circuit in device_found.channel_usages:
+            if circuit.channel in names.keys():
+                data[f'{circuit.channel}-{names[circuit.channel]}'] = np.array(circuit.usages)/1000
+            if circuit.channel == 1: data[f'{circuit.channel}-Mains_A'] = np.array(circuit.usages)/1000
+            if circuit.channel == 2: data[f'{circuit.channel}-Mains_B'] = np.array(circuit.usages)/1000
+            if circuit.channel == 3: data[f'{circuit.channel}-Mains_C'] = np.array(circuit.usages)/1000
+        return data, device_name

@@ -17,7 +17,7 @@ url = "https://media.licdn.com/dms/image/C560BAQEkLah7iU0OXg/company-logo_200_20
 response = requests.get(url)
 image_bytes = BytesIO(response.content)
 encoded_image = base64.b64encode(image_bytes.read()).decode("utf-8")
-date_range = pd.date_range(start=datetime.now()-relativedelta(years=1),end=datetime.now()-relativedelta(days=2))
+date_range = pd.date_range(start=datetime.now()-relativedelta(years=1),end=datetime.now()-relativedelta(days=1))
 app.layout = html.Div([
     html.Img(src='data:image/png;base64,{}'.format(encoded_image), style={'width':'12.5%', 'float':'left', 'margin-left':'150px', 'margin-top':'-35px'}),
     dcc.Input(id='email', type='email', placeholder='Ingrese su correo'),
@@ -26,8 +26,8 @@ app.layout = html.Div([
             id='my-date-picker-range',
             min_date_allowed=date_range.min(),
             max_date_allowed=date_range.max(),
-            initial_visible_month=(datetime.now()-relativedelta(days=2)-relativedelta(months=1)).date(),
-            start_date = (datetime.now()-relativedelta(days=2)-relativedelta(months=1)).date(),
+            initial_visible_month=(datetime.now()-relativedelta(days=1)-relativedelta(months=1)).date(),
+            start_date = (datetime.now()-relativedelta(days=1)-relativedelta(months=1)).date(),
             end_date = date_range.max()),
     html.Div(id='text_info'),
     html.Div(id='title_output'),
